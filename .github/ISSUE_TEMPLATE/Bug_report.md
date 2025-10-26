@@ -1,36 +1,41 @@
 ---
 name: Bug Report
-about: Create a report to help us improve
-
+about: Report a bug to help us improve the project.
+title: "[BUG] "
+labels: bug
+assignees: ''
 ---
 
-<!--
-Thanks for coming here to report a bug. :)
+**Describe the bug**
+A clear and concise description of what the bug is.
 
-Please describe it in this section, fill out the correct check boxes
-below with an "x", then click the "Submit new issue" button at the bottom
--->
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Go to '...'
+2. Click on '....'
+3. Scroll down to '....'
+4. See error
 
-Details for the issue
---------------------
+**Expected behavior**
+A clear and concise description of what you expected to happen.
 
-#### What did you do?
+**Actual behavior**
+A clear and concise description of what actually happened.
 
+**Screenshots/Videos**
+If applicable, add screenshots or a short video to help explain your problem.
 
-#### What did you expect to see?
+**Unity Version**
+e.g., Unity 2023.2.1f1
 
+**Platform**
+e.g., Windows, macOS, Android, iOS, WebGL
 
-#### What did you see instead?
+**Relevant Assets/Scenes**
+Specify any particular assets, scenes, or scripts related to the issue.
 
+**Error Messages/Logs**
+If applicable, copy and paste any relevant error messages from the Unity Console or player logs.
 
-Useful extra information
--------------------------
-
-The info below often helps, please fill it out if you're able to. :)
-
-#### What operating system are you using?
-
-- [ ] Windows: ( _version:_ ___ )
-- [ ] Mac OS: ( _version:_ ___ )
-<!-- - [ ] Linux: ( _distro:_ ___ ) -->
-<!-- - [ ] Other: __x -->
+**Additional context**
+Add any other context about the problem here.
