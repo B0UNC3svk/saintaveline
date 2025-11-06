@@ -53,6 +53,10 @@ public class BoatDriver : MonoBehaviour
 
     [Header("Dismount Points")]
     [SerializeField] private Transform _dismountPoint1;
+
+    [Header("Boat Sounds")]
+    [SerializeField] private AudioSource _motorSound;
+    [SerializeField] private AudioSource _idleFloatingSound;
    
     // AI: runtime state
     private Rigidbody _rb;
@@ -70,14 +74,10 @@ public class BoatDriver : MonoBehaviour
     private Vector3 _originalCamLocalPos;
     private Quaternion _originalCamLocalRot;
     private Transform _originalPlayerParent = null!;
-    private Vector3 _originalPlayerLocalPos;
-    private Quaternion _originalPlayerLocalRot;
     
     private FPSMovement? _fpsMovement;
     private FootstepAudio? _footstepAudio;
     private CharacterController? _characterController;
-
-    private AudioSource _motorSound;
 
     private void Awake()
     {
@@ -87,7 +87,6 @@ public class BoatDriver : MonoBehaviour
         _characterController = playerObject.GetComponent<CharacterController>();
 
         _rb = GetComponent<Rigidbody>();
-        _motorSound = GetComponent<AudioSource>();
         _motorSound.loop = true;
 
         // AI: reasonable Rigidbody defaults for surface craft
@@ -95,6 +94,8 @@ public class BoatDriver : MonoBehaviour
         _rb.angularDamping = Mathf.Max(_rb.angularDamping, 2f);
         _rb.interpolation = RigidbodyInterpolation.Interpolate;
         _rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+
+        InputManager.Instance.RegisterInputHandler(InputState.BoatDriving, ProcessInput);
     }
 
     private float _mouseSensitivity = 2f;
@@ -102,7 +103,7 @@ public class BoatDriver : MonoBehaviour
     private float _xRotation = 0f;
     private float _yRotation = 0f;
 
-    private void Update()
+    private void ProcessInput()
     {
         if (_isPiloting)
         {
@@ -166,7 +167,10 @@ public class BoatDriver : MonoBehaviour
                 1f - Mathf.Exp(-_cameraLerp * Time.deltaTime)
             );
         }
+    }
 
+    private void Update()
+    {
         // AI: visual wheel turn
         if (_steeringWheelVisual != null)
         {
@@ -272,8 +276,6 @@ public class BoatDriver : MonoBehaviour
 
         // AI: remember original player transform
         _originalPlayerParent = _playerRoot.parent;
-        _originalPlayerLocalPos = _playerRoot.localPosition;
-        _originalPlayerLocalRot = _playerRoot.localRotation;
 
         // AI: parent player to seat or boat
         Transform seat = _pilotSeat ? _pilotSeat : transform;
@@ -306,6 +308,7 @@ public class BoatDriver : MonoBehaviour
         _characterController!.enabled = false;
         _fpsMovement!.IsInDrivingMode = true;
         _footstepAudio!.IsEnabled = false;
+        InputManager.Instance.SetInputState(InputState.BoatDriving);
         this.StartCoolDown();
     }
 
@@ -356,6 +359,7 @@ public class BoatDriver : MonoBehaviour
         _fpsMovement!.IsInDrivingMode = false;
         _footstepAudio!.IsEnabled = true;
         this.StartCoolDown();
+        InputManager.Instance.SetInputState(InputState.Gameplay);
     }
 
     // AI: utility to find and disable a component by type name

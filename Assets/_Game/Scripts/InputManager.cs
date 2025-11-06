@@ -1,62 +1,109 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
-public class InputManagerState : IDisposable
+public enum InputState
 {
-    private InputManager _manager;
-    private bool _crosshairActive = false;
-    private CursorLockMode _cursorLockMode;
-    private bool _cursorVisible;
-
-    public InputManagerState(InputManager manager)
-    {
-        _manager = manager;
-        _crosshairActive = _manager.CrossHair.activeSelf;
-        _cursorLockMode = Cursor.lockState;
-        _cursorVisible = Cursor.visible;
-    }
-    
-    public void Dispose()
-    {
-        _manager.CrossHair.SetActive(_crosshairActive);
-        Cursor.lockState = _cursorLockMode;
-        Cursor.visible = _cursorVisible;
-    }
+    Gameplay,
+    InventoryDlg,
+    CodexDlg,
+    MapLabeling,
+    BoatDriving
 }
 
 public class InputManager : MonoBehaviour
 {
-    [SerializeField] private GameObject _crossHair;
-    public GameObject CrossHair => _crossHair;
-
     public static InputManager Instance { get; private set; }
+    public InputState CurrentState { get; private set; } = InputState.Gameplay;
 
-    private void Awake()
+    Dictionary<InputState, Action> _inputHandlers = new Dictionary<InputState, Action>();
+    Action _currentHandler;
+
+    InputManager()
     {
-        if (Instance != null && Instance != this)
+        if (Instance != null)
         {
-            Destroy(this.gameObject);
+            throw new Exception("InputManager: Multiple instances detected. InputManager is a singleton and there should only be one instance in the scene.");
+        }
+
+        Instance = this;
+    }
+
+    public void RegisterInputHandler(InputState area, Action handler)
+    {
+        _inputHandlers[area] = handler;
+    }
+
+    public void SetInputState(InputState newState)
+    {
+        CurrentState = newState;
+        if (_inputHandlers.TryGetValue(CurrentState, out var newHandler))
+        {
+            _currentHandler = newHandler;
         }
         else
         {
-            Instance = this;
+            _currentHandler = null;
         }
     }
 
-    public InputManagerState SetState(bool crossHairVisible, CursorLockMode cursorLockMode, bool cursorVisible)
+    private void Update()
     {
-        var retval = PushState();
+        if (Input.GetKeyDown(KeyCode.I) 
+            && CurrentState == InputState.Gameplay)
+        {
+            if (InventoryUI.Instance.IsActive)
+            {
+                throw new Exception("InputManager: Inventory UI is already active when trying to open it.");
+            }
 
-        _crossHair.SetActive(crossHairVisible);
-        Cursor.lockState = cursorLockMode;
-        Cursor.visible = cursorVisible;
+            var playerEntity = this.GetComponentInParent<CharacterEntity>();
+            if (playerEntity == null)
+            {
+                throw new System.Exception("PlayerInteractor: CharacterEntity script not found on Player object.");
+            }
 
-        return retval;
-    }
+            this.SetInputState(InputState.InventoryDlg);
+            InventoryUI.Instance.ShowInventory(playerEntity);
+        }
+        else if (Input.GetKeyDown(KeyCode.M))
+        {
+            if (CurrentState == InputState.Gameplay)
+            {
+                if (CodexOverlayController.Instance.IsActive)
+                {
+                    throw new Exception("InputManager: Codex Overlay is already active when trying to open it.");
+                }
 
-    public InputManagerState PushState()
-    {
-        InputManagerState retval = new(this);
-        return retval;
+                var playerEntity = this.GetComponentInParent<CharacterEntity>();
+                if (playerEntity == null)
+                {
+                    throw new System.Exception("PlayerInteractor: CharacterEntity script not found on Player object.");
+                }
+
+                this.SetInputState(InputState.CodexDlg);
+                CodexOverlayController.Instance.OpenCodexOverlay(playerEntity);
+            }
+        }
+        else if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (CurrentState == InputState.CodexDlg)
+            {
+                if (!CodexOverlayController.Instance.IsActive)
+                {
+                    throw new Exception("InputManager: Codex Overlay is not active when trying to close it.");
+                }
+
+                this.SetInputState(InputState.Gameplay);
+                CodexOverlayController.Instance.ToggleCodexOverlay(false);
+            }
+        }
+        else if (Input.GetKeyDown(KeyCode.Comma) 
+            && CurrentState == InputState.Gameplay)
+        {
+            this.SetInputState(InputState.MapLabeling);
+        }
+
+        _currentHandler?.Invoke();
     }
 }
