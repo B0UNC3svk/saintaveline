@@ -4,28 +4,20 @@ using UnityEngine;
 
 public class DebugHUD : MonoBehaviour
 {
-    // UI Elements
-    public GameObject hudPanel;
-    public TextMeshProUGUI groundedText;
-    public TextMeshProUGUI sonNPCStateText;
-    public TextMeshProUGUI sonNPCDistanceText;
-    public TextMeshProUGUI enemyHealthText;
-    public TextMeshProUGUI boatText;
+    [SerializeField] private GameObject _debugPanel;
 
-    // Objects of interest
-    public CharacterController controller;
-    public GameObject enemyNPC;
-    private GameEntity enemyNPCHealth;
-    public SonNPC sonNPC;
-    public BoatWaterDetector boatDetector;
+    [Header("Object to measure distance to")]
+    [SerializeField] private TextMeshProUGUI distanceText;
+    [SerializeField] private GameObject distanceObject;
 
-    private bool isVisible = true;
+    private Transform _playerTransform;
     
     void Start()
     {
-        if (enemyNPC)
+        var player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null)
         {
-            enemyNPCHealth = enemyNPC.GetComponent<GameEntity>();
+            _playerTransform = player.transform;
         }
     }
 
@@ -34,54 +26,12 @@ public class DebugHUD : MonoBehaviour
         // Toggle visibility with "."
         if (Input.GetKeyDown(KeyCode.Period))
         {
-            isVisible = !isVisible;
-            hudPanel.SetActive(isVisible);
+            _debugPanel.SetActive(!_debugPanel.activeSelf);
         }
 
-        if (isVisible)
-        {
-            groundedText.text = "Grounded: " + controller.isGrounded.ToString();
-            sonNPCStateText.text = "SonNPC State: " + sonNPC.StateMachine.CurrentState?.GetType().Name;
-            float distance = Vector3.Distance(controller.transform.position, sonNPC.transform.position);
-            sonNPCDistanceText.text = "SonNPC Dist: " + distance.ToString("F2");
+        if (!_debugPanel.activeSelf) return;
 
-            // As we now have multiple enemies, we should either extend the DebugHUD to support multiple enemies
-            // Or simply remove the enemy health display if not needed
-            // This object check prevents null reference exceptions when we don't have an enemy assigned
-            if (enemyNPC != null && enemyNPCHealth != null)
-            {
-                enemyHealthText.text = "Enemy Health: " + enemyNPCHealth.Health.ToString("F2");
-            }
-
-            string boatLandTest = boatDetector.IsOverland ? "Overland" : "Not Overland";
-            string boatWaterTest = boatDetector.IsOnWater ? "On Water" : "Not On Water";
-            string boatBeachedTest = boatDetector.IsBeached ? "Beached" : "Not Beached";
-
-            boatText.text = $@"Boat Land: {boatLandTest}
-Boat Water: {boatWaterTest}
-Boat Beached: {boatBeachedTest}
-AvgWaterDepth: {boatDetector.AvgWaterDepth}
-WaterCoverage01: {boatDetector.WaterCoverage01}
-MinGroundClearance: {boatDetector.MinGroundClearance}
-WaterHits: {boatDetector.WaterHits}
-SamplePoints:
-{SamplePointsString()}
-";
-        }
+        float distanceValue = Vector3.Distance(_playerTransform.position, distanceObject.transform.position);
+        distanceText.text = "Distance: " + distanceValue.ToString("F2");
     }
-
-    string SamplePointsString()
-    {
-        if (boatDetector.SamplePoints == null) return string.Empty;
-        string s = "";
-        for (int i = 0; i < boatDetector.SamplePoints.Length; i++)
-        {
-            if (boatDetector.SamplePoints[i] != null)
-            {
-                s += boatDetector.SamplePoints[i].name + ":" + boatDetector.SamplePoints[i].position.ToString("F2") + "\n";
-            }
-        }
-        return s;
-    }
-
 }

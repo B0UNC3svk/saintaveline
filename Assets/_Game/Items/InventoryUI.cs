@@ -1,15 +1,12 @@
 #nullable enable
 
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UIElements;
 using Button = UnityEngine.UI.Button;
-using Toggle = UnityEngine.UI.Toggle;
 using Image = UnityEngine.UI.Image;
-using static UnityEngine.GraphicsBuffer;
-using System.Linq;
-using System.Runtime.CompilerServices;
+using Toggle = UnityEngine.UI.Toggle;
 
 // This script is attached to the Inventory UI dialog prefab. 
 public class InventoryUI : MonoBehaviour
@@ -30,7 +27,7 @@ public class InventoryUI : MonoBehaviour
 
     // used to preserve the state of the crosshair, cursor lock mode,
     // and cursor visibility
-    private InputManagerState? _inputState = null;
+    private UIManagerState? _inputState = null;
 
     public bool IsActive => _inventoryDlg.enabled;
 
@@ -79,9 +76,11 @@ public class InventoryUI : MonoBehaviour
         listItems.Add("Player");
 
         _transferDropdown.AddOptions(listItems.OrderBy(x => x).ToList());
+
+        InputManager.Instance.RegisterInputHandler(InputState.InventoryDlg, this.ProcessInput);
     }
 
-    public void Update()
+    public void ProcessInput()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
         {
@@ -92,7 +91,7 @@ public class InventoryUI : MonoBehaviour
 
     public void ShowInventory(CharacterEntity entity)
     {
-        _inputState = InputManager.Instance.SetState(false, CursorLockMode.None, true);
+        _inputState = UIManager.Instance.SetState(false, CursorLockMode.None, true);
 
         foreach (GameObject item in _itemObjects)
         {
@@ -296,6 +295,7 @@ public class InventoryUI : MonoBehaviour
 
     private void CloseDialog()
     {
+        InputManager.Instance.SetInputState(InputState.Gameplay);
         _inputState?.Dispose();
         _inventoryDlg.enabled = false;
         _owner = null;

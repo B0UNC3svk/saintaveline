@@ -1,10 +1,6 @@
 #nullable enable
-using NUnit.Framework.Internal.Commands;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.UIElements;
-using static UnityEditor.Progress;
 
 /// <summary>
 /// This script is attached to the Main Camera which is a child of the Player object.
@@ -96,6 +92,8 @@ public class PlayerInteractor : MonoBehaviour
         }
 
         _playerEntity = playerEntity;
+
+        InputManager.Instance.RegisterInputHandler(InputState.Gameplay, this.ProcessInput);
     }
 
     void ClearFocus()
@@ -119,10 +117,13 @@ public class PlayerInteractor : MonoBehaviour
         FocusedObject = null;
     }
 
-    void Update()
+    private void Update()
     {
         checkInteractions();
+    }
 
+    void ProcessInput()
+    {
         if (Input.GetKeyDown(KeyCode.Q))
         {
             if (_playerEntity!.EquippedItem == null)
@@ -153,34 +154,6 @@ public class PlayerInteractor : MonoBehaviour
 
             _playerEntity!.AddItemToInventory(itemEntity);
             BottomTypewriter.Instance.Enqueue("Added item '" + itemEntity.ItemData!.ItemName + "' to inventory.");
-        }
-        else if (Input.GetKeyDown(KeyCode.I))
-        {
-            if (InventoryUI.Instance.IsActive) return;
-
-            var playerEntity = this.GetComponentInParent<CharacterEntity>();
-            if (playerEntity == null)
-            {
-                throw new System.Exception("PlayerInteractor: CharacterEntity script not found on Player object.");
-            }
-
-            InventoryUI.Instance.ShowInventory(playerEntity);
-        }
-        else if (Input.GetKeyDown(KeyCode.M))
-        {
-            if (CodexOverlayController.Instance.IsActive)
-            {
-                CodexOverlayController.Instance.ToggleCodexOverlay(false);
-                return;
-            }
-
-            var playerEntity = this.GetComponentInParent<CharacterEntity>();
-            if (playerEntity == null)
-            {
-                throw new System.Exception("PlayerInteractor: CharacterEntity script not found on Player object.");
-            }
-
-            CodexOverlayController.Instance.OpenCodexOverlay(playerEntity);
         }
         else if (Input.GetKeyDown(KeyCode.F))
         {
