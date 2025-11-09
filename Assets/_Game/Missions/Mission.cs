@@ -47,7 +47,6 @@ public class Mission
     {
         if (!StartMessage.Equals(string.Empty))
         {
-            ErrorMessage.Instance.ShowError("Testing error message!");
             BottomTypewriter.Instance.Enqueue(StartMessage);
         }
         
